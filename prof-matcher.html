@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IO PhD Professor Match Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1>IO PhD Professor Match Tool</h1>
+      <p class="tagline">Match research interests to professor descriptions using cosine similarity</p>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="#tool">Tool</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <a class="back-link" href="index.html">← Back to Home</a>
+        <h2>How It Works</h2>
+        <p>
+          Paste a paragraph describing your research interests. The tool compares your text
+          to a small set of professor research descriptions using a simple cosine similarity
+          approach based on word counts.
+        </p>
+      </div>
+    </section>
+
+    <section id="tool" class="section alt-section">
+      <div class="container">
+        <div class="tool-box">
+          <h2>Describe Your Research Interests</h2>
+          <p>
+            Example: “I am interested in personnel selection, structured interviews,
+            AI in hiring, fairness, psychometric validation, and automated assessment.”
+          </p>
+
+          <textarea id="userInput" placeholder="Paste your research interests here..."></textarea>
+          <button class="button" onclick="matchProfessors()">Match Me</button>
+
+          <div id="results" class="results"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 Kayden Stockdale</p>
+    </div>
+  </footer>
+
+  <script>
+    const professors = [
+      {
+        name: "Dr. Jane Smith",
+        university: "Example University",
+        description: "Research on personnel selection, structured interviews, psychometrics, employee assessment, fairness in hiring, and applicant evaluation."
+      },
+      {
+        name: "Dr. Daniel Rivera",
+        university: "Metro University",
+        description: "Research on AI in organizations, algorithmic decision making, fairness, assessment technology, workplace automation, and the future of work."
+      },
+      {
+        name: "Dr. Emily Chen",
+        university: "Central College",
+        description: "Research on training, learning, employee development, feedback, performance appraisal, and workplace skill acquisition."
+      },
+      {
+        name: "Dr. Michael Lee",
+        university: "Example State University",
+        description: "Research on leadership, teams, organizational behavior, motivation, employee engagement, and team effectiveness."
+      },
+      {
+        name: "Dr. Priya Patel",
+        university: "Sample University",
+        description: "Research on occupational health, employee well-being, stress, work-family issues, and job burnout."
+      },
+      {
+        name: "Dr. Robert Johnson",
+        university: "Lakeside University",
+        description: "Research on job attitudes, organizational justice, turnover, work design, and employee motivation."
+      },
+      {
+        name: "Dr. Alicia Morgan",
+        university: "North Valley University",
+        description: "Research on diversity, inclusion, bias in hiring, organizational fairness, and employee belonging."
+      }
+    ];
+
+    function preprocess(text) {
+      return text
+        .toLowerCase()
+        .replace(/[^\w\s]/g, "")
+        .split(/\s+/)
+        .filter(word => word.length > 2);
+    }
+
+    function buildVocabulary(texts) {
+      const vocabSet = new Set();
+      texts.forEach(text => {
+        preprocess(text).forEach(word => vocabSet.add(word));
+      });
+      return Array.from(vocabSet);
+    }
+
+    function vectorize(text, vocab) {
+      const words = preprocess(text);
+      const counts = {};
+
+      for (const word of words) {
+        counts[word] = (counts[word] || 0) + 1;
+      }
+
+      return vocab.map(word => counts[word] || 0);
+    }
+
+    function cosineSimilarity(vecA, vecB) {
+      let dotProduct = 0;
+      let normA = 0;
+      let normB = 0;
+
+      for (let i = 0; i < vecA.length; i++) {
+        dotProduct += vecA[i] * vecB[i];
+        normA += vecA[i] * vecA[i];
+        normB += vecB[i] * vecB[i];
+      }
+
+      if (normA === 0 || normB === 0) {
+        return 0;
+      }
+
+      return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    }
+
+    function matchProfessors() {
+      const userText = document.getElementById("userInput").value.trim();
+      const resultsDiv = document.getElementById("results");
+
+      if (!userText) {
+        resultsDiv.innerHTML = "<p class='error-text'>Please paste your research interests first.</p>";
+        return;
+      }
+
+      const allTexts = [userText, ...professors.map(prof => prof.description)];
+      const vocabulary = buildVocabulary(allTexts);
+      const userVector = vectorize(userText, vocabulary);
+
+      const ranked = professors.map(prof => {
+        const profVector = vectorize(prof.description, vocabulary);
+        const similarity = cosineSimilarity(userVector, profVector);
+
+        return {
+          ...prof,
+          similarity
+        };
+      });
+
+      ranked.sort((a, b) => b.similarity - a.similarity);
+
+      const topFive = ranked.slice(0, 5);
+
+      let html = "<h3>Top Matches</h3>";
+
+      topFive.forEach((prof, index) => {
+        html += `
+          <div class="result-card">
+            <h4>${index + 1}. ${prof.name}</h4>
+            <p><strong>University:</strong> ${prof.university}</p>
+            <p><strong>Research Description:</strong> ${prof.description}</p>
+            <p><strong>Similarity Score:</strong> ${(prof.similarity * 100).toFixed(1)}%</p>
+          </div>
+        `;
+      });
+
+      resultsDiv.innerHTML = html;
+    }
+  </script>
+</body>
+</html>

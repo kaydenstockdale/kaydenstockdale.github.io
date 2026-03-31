@@ -91,51 +91,51 @@ class RockyBot {
       }
     ];
 
-    this.responses = {
+        this.responses = {
       greeting: [
-        "Hello, {{name}}.",
-        "Greeting, {{name}}.",
+        "Hello, {{name}}. Good good good.",
+        "Ah, {{name}}. You are here, yes.",
         "Hello hello, {{name}}."
       ],
       goodbye: [
-        "Goodbye, {{name}}.",
-        "Parting now, {{name}}.",
-        "See you later, {{name}}."
+        "Goodbye, {{name}}. Rocky talk later.",
+        "You go now, yes. Goodbye, {{name}}.",
+        "Parting now, {{name}}. Sad, but acceptable."
       ],
       help: [
         "Show problem, {{name}}. Rocky help.",
-        "Explain issue clearly, {{name}}.",
-        "We solve problem step by step, {{name}}."
+        "Explain problem clearly, yes, {{name}}.",
+        "We solve together, {{name}}. Step step step."
       ],
       danger: [
-        "Danger, {{name}}. Stop and think first.",
-        "Risky plan, {{name}}. Need better idea.",
-        "Bad bad bad, {{name}}. Choose safer path."
+        "Danger, {{name}}. Bad bad bad.",
+        "No no no, {{name}}. Unsafe plan.",
+        "Risk high, {{name}}. Choose safer path, yes."
       ],
       friendship: [
-        "You are friend, {{name}}.",
-        "Good to work together, {{name}}.",
-        "Trust is good, {{name}}."
+        "You are friend, {{name}}. Good.",
+        "Trust between us, yes, {{name}}.",
+        "Working together is good good good, {{name}}."
       ],
       question: [
-        "Interesting question, {{name}}.",
-        "Rocky thinks, yes, {{name}}.",
-        "Explain more, {{name}}. Need clear details."
+        "Question is interesting, {{name}}.",
+        "Rocky thinks now, {{name}}. Wait wait.",
+        "Need more detail, {{name}}. Explain better, yes?"
       ],
       unknown: [
-        "I not understand, {{name}}.",
-        "Confusing, {{name}}. Say different way.",
-        "Need more clear words, {{name}}."
+        "Rocky not understand, {{name}}.",
+        "Confusing words, {{name}}. Say different way.",
+        "Meaning unclear, {{name}}. Explain, yes?"
       ],
       learnedName: [
-        "Ahhh. Your name is {{name}}. Good, yes.",
-        "Rocky learns: {{name}}. Excellent.",
-        "Now I know you, {{name}}."
+        "Ahhh, {{name}}. Rocky knows now.",
+        "Good good. Your name is {{name}}.",
+        "Rocky learns you are {{name}}. Excellent."
       ],
       updatedName: [
-        "Name changed. Now you are {{name}}, yes.",
-        "Rocky updates name: {{name}}.",
-        "Understood. I call you {{name}} now."
+        "Ah, correction. You are {{name}} now.",
+        "Rocky updates name to {{name}}. Good.",
+        "Understood. New name: {{name}}."
       ]
     };
   }

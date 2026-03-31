@@ -1,13 +1,24 @@
 class RockyBot {
   constructor() {
     this.memory = {
-      userName: null
+      userName: localStorage.getItem("rockyUserName") || null,
+      learnedLexicon: JSON.parse(localStorage.getItem("rockyLearnedLexicon") || "{}")
     };
 
     this.state = {
       lastIntent: null,
-      lastReply: null
+      lastReply: null,
+      pendingUnknownWord: null
     };
+
+    this.validIntents = [
+      "greeting",
+      "goodbye",
+      "help",
+      "danger",
+      "friendship",
+      "question"
+    ];
 
     this.intentRules = [
       {
@@ -129,6 +140,11 @@ class RockyBot {
     };
   }
 
+  saveMemory() {
+    localStorage.setItem("rockyUserName", this.memory.userName || "");
+    localStorage.setItem("rockyLearnedLexicon", JSON.stringify(this.memory.learnedLexicon));
+  }
+
   getDisplayName() {
     return this.memory.userName || "friend";
   }
@@ -139,11 +155,13 @@ class RockyBot {
 
   randomChoiceDifferent(arr, lastValue = null) {
     if (arr.length === 1) return arr[0];
-
     const filtered = arr.filter(item => item !== lastValue);
-    const choices = filtered.length > 0 ? filtered : arr;
-
+    const choices = filtered.length ? filtered : arr;
     return choices[Math.floor(Math.random() * choices.length)];
+  }
+
+  tokenize(text) {
+    return text.toLowerCase().match(/[a-z][a-z'-]*/g) || [];
   }
 
   extractName(text) {
@@ -157,11 +175,10 @@ class RockyBot {
     for (const pattern of patterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
-        const rawName = match[1];
-        return rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
+        const raw = match[1];
+        return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
       }
     }
-
     return null;
   }
 
@@ -171,35 +188,127 @@ class RockyBot {
 
     const oldName = this.memory.userName;
     this.memory.userName = newName;
+    this.saveMemory();
 
     if (!oldName) return "learnedName";
     if (oldName !== newName) return "updatedName";
     return "learnedName";
   }
 
+  isKnownWord(word) {
+    if (this.memory.learnedLexicon[word]) return true;
+
+    return this.intentRules.some(rule =>
+      rule.patterns.some(pattern => pattern.test(word))
+    );
+  }
+
+  getLongestUnknownWord(text) {
+    const words = this.tokenize(text)
+      .filter(word => word.length >= 3)
+      .filter(word => !this.isKnownWord(word));
+
+    if (!words.length) return null;
+
+    return words.sort((a, b) => b.length - a.length)[0];
+  }
+
+  getAdjectiveCandidate(text) {
+    const doc = nlp(text);
+    const adjectives = doc.adjectives().json();
+
+    for (const entry of adjectives) {
+      const word = (entry.text || "").toLowerCase().trim();
+      if (!word) continue;
+      if (!this.isKnownWord(word)) return word;
+    }
+
+    return null;
+  }
+
+  getWordToAskAbout(text) {
+    const adjective = this.getAdjectiveCandidate(text);
+    if (adjective) return adjective;
+
+    return this.getLongestUnknownWord(text);
+  }
+
   scoreIntent(text, rule) {
     let score = 0;
     for (const pattern of rule.patterns) {
-      if (pattern.test(text)) {
-        score += rule.weight;
-      }
+      if (pattern.test(text)) score += rule.weight;
     }
     return score;
   }
 
   detectIntent(text) {
+    const scores = {
+      greeting: 0,
+      goodbye: 0,
+      help: 0,
+      danger: 0,
+      friendship: 0,
+      question: 0
+    };
+
+    for (const rule of this.intentRules) {
+      scores[rule.name] += this.scoreIntent(text, rule);
+    }
+
+    for (const word of this.tokenize(text)) {
+      const learnedIntent = this.memory.learnedLexicon[word];
+      if (learnedIntent && scores[learnedIntent] !== undefined) {
+        scores[learnedIntent] += 5;
+      }
+    }
+
     let bestIntent = "unknown";
     let bestScore = 0;
 
-    for (const rule of this.intentRules) {
-      const score = this.scoreIntent(text, rule);
+    for (const [intent, score] of Object.entries(scores)) {
       if (score > bestScore) {
         bestScore = score;
-        bestIntent = rule.name;
+        bestIntent = intent;
       }
     }
 
     return bestIntent;
+  }
+
+  inferIntentFromExplanation(text) {
+    const lower = text.toLowerCase();
+
+    const directPatterns = [
+      /\b(greeting|goodbye|help|danger|friendship|question)\b/,
+      /\bmeans\s+(greeting|goodbye|help|danger|friendship|question)\b/,
+      /\bis\s+(greeting|goodbye|help|danger|friendship|question)\b/,
+      /\bbelongs to\s+(greeting|goodbye|help|danger|friendship|question)\b/
+    ];
+
+    for (const pattern of directPatterns) {
+      const match = lower.match(pattern);
+      if (match) return match[1];
+    }
+
+    const inferred = this.detectIntent(text);
+    return inferred === "unknown" ? null : inferred;
+  }
+
+  handlePendingUnknownWord(text) {
+    if (!this.state.pendingUnknownWord) return null;
+
+    const learnedIntent = this.inferIntentFromExplanation(text);
+    const word = this.state.pendingUnknownWord;
+
+    if (!learnedIntent) {
+      return `Rocky still confused. Does "${word}" mean greeting, goodbye, help, danger, friendship, or question?`;
+    }
+
+    this.memory.learnedLexicon[word] = learnedIntent;
+    this.saveMemory();
+    this.state.pendingUnknownWord = null;
+
+    return `Ahhh. Rocky learns "${word}" means ${learnedIntent}, yes.`;
   }
 
   buildResponse(intent, text) {
@@ -239,7 +348,13 @@ class RockyBot {
   respond(input) {
     const text = input.trim();
 
-    // First, see if Rocky learns the user's name
+    const wordReply = this.handlePendingUnknownWord(text);
+    if (wordReply) {
+      this.state.lastIntent = "learnedWord";
+      this.state.lastReply = wordReply;
+      return wordReply;
+    }
+
     const nameEvent = this.maybeLearnName(text);
     if (nameEvent) {
       const reply = this.fillTemplate(
@@ -251,11 +366,21 @@ class RockyBot {
     }
 
     const intent = this.detectIntent(text);
-    const response = this.buildResponse(intent, text);
 
+    if (intent === "unknown") {
+      const targetWord = this.getWordToAskAbout(text);
+      if (targetWord) {
+        this.state.pendingUnknownWord = targetWord;
+        const reply = `Rocky does not know word "${targetWord}". What does "${targetWord}" mean?`;
+        this.state.lastIntent = "clarification";
+        this.state.lastReply = reply;
+        return reply;
+      }
+    }
+
+    const response = this.buildResponse(intent, text);
     this.state.lastIntent = intent;
     this.state.lastReply = response;
-
     return response;
   }
 }
@@ -282,7 +407,6 @@ function addMessage(sender, text, className) {
 function sendMessage() {
   const input = document.getElementById("userInput");
   const text = input.value.trim();
-
   if (!text) return;
 
   addMessage("You", text, "user");

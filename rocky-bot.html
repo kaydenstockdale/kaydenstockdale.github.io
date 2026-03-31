@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rocky-Inspired Chatbot</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1>Rocky-Inspired Chatbot</h1>
+      <p class="tagline">A JavaScript character bot with no APIs or LLMs</p>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="#chatbot">Chatbot</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <a class="back-link" href="index.html">← Back to Home</a>
+        <h2>About This Demo</h2>
+        <p>
+          This is a narrow chatbot inspired by Rocky’s communication style:
+          short sentences, direct reactions, repetition, and “question?” phrasing.
+        </p>
+      </div>
+    </section>
+
+    <section id="chatbot" class="section alt-section">
+      <div class="container">
+        <div class="tool-box">
+          <h2>Talk to Rocky</h2>
+          <p>Try: “hello”, “can you help me?”, “this is dangerous”, or “how does gravity work?”</p>
+
+          <div id="chatWindow" class="results"></div>
+
+          <textarea id="userInput" placeholder="Type your message here..."></textarea>
+          <button class="button" onclick="sendMessage()">Send</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 Kayden Stockdale</p>
+    </div>
+  </footer>
+
+  <script src="rocky-bot.js"></script>
+</body>
+</html>

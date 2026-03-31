@@ -314,15 +314,6 @@ class RockyBot {
   buildResponse(intent, text) {
     const lower = text.toLowerCase();
 
-    if (intent === "help" && /\bcode\b|\bbug\b|\berror\b|\bjavascript\b|\bjs\b/i.test(lower)) {
-      const options = [
-        "Show code, {{name}}. Rocky inspect problem.",
-        "Code issue, yes, {{name}}? Paste code here.",
-        "Rocky can help fix code, {{name}}. Show exact problem."
-      ];
-      return this.fillTemplate(this.randomChoiceDifferent(options, this.state.lastReply));
-    }
-
     if (intent === "question" && /\bwhy\b/i.test(lower)) {
       const options = [
         "Why question is big question, {{name}}.",

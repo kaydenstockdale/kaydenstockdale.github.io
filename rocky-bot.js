@@ -1,8 +1,8 @@
 class RockyBot {
   constructor() {
     this.memory = {
-      userName: localStorage.getItem("rockyUserName") || null,
-      learnedLexicon: JSON.parse(localStorage.getItem("rockyLearnedLexicon") || "{}")
+      userName: sessionStorage.getItem("rockyUserName") || null,
+      learnedLexicon: JSON.parse(sessionStorage.getItem("rockyLearnedLexicon") || "{}")
     };
 
     this.state = {
@@ -91,7 +91,7 @@ class RockyBot {
       }
     ];
 
-        this.responses = {
+    this.responses = {
       greeting: [
         "Hello, {{name}}. Good good good.",
         "Ah, {{name}}. You are here, yes.",
@@ -141,8 +141,8 @@ class RockyBot {
   }
 
   saveMemory() {
-    localStorage.setItem("rockyUserName", this.memory.userName || "");
-    localStorage.setItem("rockyLearnedLexicon", JSON.stringify(this.memory.learnedLexicon));
+    sessionStorage.setItem("rockyUserName", this.memory.userName || "");
+    sessionStorage.setItem("rockyLearnedLexicon", JSON.stringify(this.memory.learnedLexicon));
   }
 
   getDisplayName() {
@@ -316,18 +316,18 @@ class RockyBot {
 
     if (intent === "question" && /\bwhy\b/i.test(lower)) {
       const options = [
-        "Why question is big question, {{name}}.",
-        "Need cause and reason, yes, {{name}}.",
-        "Rocky explains, but be specific, {{name}}."
+        "Why is cause-question, yes, {{name}}.",
+        "Need reason for thing, yes. Rocky explain.",
+        "Big why-question, {{name}}. Be specific."
       ];
       return this.fillTemplate(this.randomChoiceDifferent(options, this.state.lastReply));
     }
 
     if (intent === "question" && /\bhow\b/i.test(lower)) {
       const options = [
-        "How question means process, yes, {{name}}.",
-        "Rocky can explain steps, {{name}}.",
-        "Ask clearly, {{name}}. Rocky gives method."
+        "How is process-question, yes, {{name}}.",
+        "Rocky gives steps, {{name}}.",
+        "Need method? Good. Ask clearly, {{name}}."
       ];
       return this.fillTemplate(this.randomChoiceDifferent(options, this.state.lastReply));
     }
